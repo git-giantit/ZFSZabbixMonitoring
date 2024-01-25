@@ -1,0 +1,1 @@
+zabbix ALL=NOPASSWD: /usr/bin/traceroute,/bin/ping,/usr/bin/nmap,/usr/bin/fping,/usr/sbin/fping,/sbin/zpool,/sbin/zfs,/bin/sed

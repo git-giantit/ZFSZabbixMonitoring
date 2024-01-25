@@ -1,0 +1,162 @@
+zabbix_export:
+  version: '6.0'
+  date: '2024-01-25T14:08:02Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 26a2e7f11ca34fd393d26f52f0fabc6a
+      template: 'Template App ZFS'
+      name: 'Template App ZFS'
+      groups:
+        -
+          name: Templates
+      items:
+        -
+          uuid: f8db0d19b2c74840bea8fda790facd6e
+          name: Status
+          key: status
+          delay: '30'
+          trends: '0'
+          value_type: TEXT
+          request_method: POST
+          tags:
+            -
+              tag: Application
+              value: ZFS
+          triggers:
+            -
+              uuid: a0d0f44d310a46448bea3bf9b30f7453
+              expression: 'nodata(/Template App ZFS/status,24h)=1'
+              name: 'Sem dados do ZFS'
+              priority: AVERAGE
+            -
+              uuid: 6a64ae44a28d49bb8cffcc761c39e855
+              expression: 'find(/Template App ZFS/status,,"regexp","(ONLINE)")=0'
+              name: 'ZFS state Danger'
+              priority: DISASTER
+      discovery_rules:
+        -
+          uuid: be0418fea13e4dd695dda2bc7bd64ac8
+          name: 'Zfs Fileset discovery'
+          key: zfs.fileset.discovery
+          delay: '3600'
+          lifetime: 0d
+          item_prototypes:
+            -
+              uuid: b87e7056244e46c3b5c5f9892a845a0e
+              name: 'Zfs fileset {#FILESETNAME} refer'
+              key: 'zfs.get.fsinfo[{#FILESETNAME},refer]'
+              delay: '60'
+              history: 7d
+              units: Bytes
+              request_method: POST
+              tags:
+                -
+                  tag: Application
+                  value: ZFS
+            -
+              uuid: d955ef2c30104be6bb20dc94bb4dd4c1
+              name: 'Zfs fileset {#FILESETNAME} used'
+              key: 'zfs.get.fsinfo[{#FILESETNAME},used]'
+              delay: '60'
+              history: 7d
+              units: Bytes
+              request_method: POST
+              tags:
+                -
+                  tag: Application
+                  value: ZFS
+          graph_prototypes:
+            -
+              uuid: 3de0126e848048e78fae57db48af4cf3
+              name: 'Zfs fileset {#FILESETNAME} usage'
+              graph_items:
+                -
+                  color: C80000
+                  item:
+                    host: 'Template App ZFS'
+                    key: 'zfs.get.fsinfo[{#FILESETNAME},refer]'
+                -
+                  sortorder: '1'
+                  color: 00C800
+                  item:
+                    host: 'Template App ZFS'
+                    key: 'zfs.get.fsinfo[{#FILESETNAME},used]'
+          request_method: POST
+        -
+          uuid: 8cb55de369004aacb08fb7d7f44996a7
+          name: 'Zfs Pool discovery'
+          key: zfs.pool.discovery
+          delay: '3600'
+          lifetime: 0d
+          item_prototypes:
+            -
+              uuid: fe57434c0c594d62b5cc582db11e7605
+              name: 'Zpool {#POOLNAME} available'
+              key: 'zfs.get.fsinfo[{#POOLNAME},available]'
+              delay: '60'
+              history: 7d
+              units: Bytes
+              request_method: POST
+              tags:
+                -
+                  tag: Application
+                  value: ZFS
+            -
+              uuid: cf76ed5fb6a14eda8a443bb252f6992e
+              name: 'Zpool {#POOLNAME} used'
+              key: 'zfs.get.fsinfo[{#POOLNAME},used]'
+              delay: '60'
+              history: 7d
+              units: Bytes
+              request_method: POST
+              tags:
+                -
+                  tag: Application
+                  value: ZFS
+            -
+              uuid: 80f0dcf340b84c539c69c0dc5871773e
+              name: 'Zpool Health'
+              key: 'zfs.zpool.health[{#POOLNAME}]'
+              delay: '30'
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              request_method: POST
+              tags:
+                -
+                  tag: Application
+                  value: ZFS
+              trigger_prototypes:
+                -
+                  uuid: 63435a612e5649ff89dc6dbbbd2e3be0
+                  expression: 'find(/Template App ZFS/zfs.zpool.health[{#POOLNAME}],,"iregexp","degraded|resyncing|recovering|Not Started|FAILED")=1'
+                  name: '{#POOLNAME} ZFS State danger!'
+                  priority: DISASTER
+          trigger_prototypes:
+            -
+              uuid: bc3c448fd35d44259fd469cd655150a0
+              expression: '(last(/Template App ZFS/zfs.get.fsinfo[{#POOLNAME},used])/last(/Template App ZFS/zfs.get.fsinfo[{#POOLNAME},available])) > 9'
+              name: 'Less than 10% Free on pool {#POOLNAME}'
+              priority: AVERAGE
+          graph_prototypes:
+            -
+              uuid: 1bab3efe6f534244a39341f5cd99848a
+              name: 'Zpool {#POOLNAME} available and used'
+              type: STACKED
+              graph_items:
+                -
+                  color: 00EE00
+                  item:
+                    host: 'Template App ZFS'
+                    key: 'zfs.get.fsinfo[{#POOLNAME},available]'
+                -
+                  sortorder: '1'
+                  color: EE0000
+                  item:
+                    host: 'Template App ZFS'
+                    key: 'zfs.get.fsinfo[{#POOLNAME},used]'
+          request_method: POST
